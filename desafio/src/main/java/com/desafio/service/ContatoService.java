@@ -16,7 +16,12 @@ public class ContatoService {
     private ContatoRepository contatoRepository;
 
     public Contato salvarContato(Contato contato){
+        contato.setId(null);
         return contatoRepository.save(contato);
+    }
+
+    public List<Contato> salvarContatos(List<Contato> contatos){
+        return contatoRepository.saveAll(contatos);
     }
 
     public void deleteContatoById(Long id){
@@ -28,17 +33,14 @@ public class ContatoService {
     }
 
     public Contato findById(Long id) {
-        try {
+
             return contatoRepository.findById(id).get();
-        } catch(NoSuchElementException e) {
-            throw new EntityNotFoundException("EntityNotFoundException Contato id: " + id);
-        }
+
     }
     public Contato update(Long id, Contato contato) {
         Contato contatoEntity = contatoRepository.getReferenceById(id);
 
         contatoEntity.setContato(contato.getContato());
-        contatoEntity.setProfissional(contato.getProfissional());
         contatoEntity.setNome(contato.getNome());
 
         return contatoRepository.save(contatoEntity);

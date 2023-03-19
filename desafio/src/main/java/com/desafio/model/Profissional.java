@@ -1,6 +1,8 @@
 package com.desafio.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +24,7 @@ public class Profissional {
 
 
     @OneToMany(mappedBy = "profissional")
+    @JsonIgnore
     private List<Contato> contatos;
 
     public Long getId() {

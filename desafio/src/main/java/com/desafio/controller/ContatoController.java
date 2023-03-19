@@ -3,7 +3,9 @@ package com.desafio.controller;
 import com.desafio.model.Contato;
 import com.desafio.model.Profissional;
 import com.desafio.service.ContatoService;
+import com.desafio.service.ProfissionalService;
 import io.swagger.annotations.Api;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,9 @@ public class ContatoController {
     @Autowired
     private ContatoService contatoService;
 
+    @Autowired
+    private ProfissionalService profissionalService;
+
     @GetMapping(value = "/contacts")
     public ResponseEntity<List<Contato>> getContatosByParametros(@RequestParam("contato") String contato, @RequestParam("nome") String nome){
 
@@ -30,48 +35,66 @@ public class ContatoController {
     }
 
     @GetMapping(value = "/contacts/{id}")
-    public ResponseEntity<Contato> findById(@PathVariable Long id){
+    public ResponseEntity<?> findById(@PathVariable Long id){
 
-        Contato contato = contatoService.findById(id);
-        return ResponseEntity.ok().body(contato);
+        try {
+            Contato contato = contatoService.findById(id);
+            return ResponseEntity.ok().body(contato);
+        }
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Contato ID: " +id + " não encontrado no sistema");
+        }
     }
 
-    /*@GetMapping(value = "/all-contacts")
+    @GetMapping(value = "/all-contacts")
     public ResponseEntity<List<Contato>> findAll(){
 
         List<Contato> contatos = contatoService.findAll();
         return ResponseEntity.ok().body(contatos);
     }
 
-    public ResponseEntity<Contato> findById(@PathVariable Long id){
-        Contato contato = contatoService.findById(id);
-        return ResponseEntity.ok().body(contato);
-    }*/
-
     @PostMapping(value = "/contacts")
     public ResponseEntity<String> save(@RequestBody Contato contato){
-        Contato contatoSaved = contatoService.salvarContato(contato);
+        if(contato.getProfissional()!=null){
 
-        URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/contatos/{id}")
-                .buildAndExpand(contatoSaved.getId()).toUri();
+            try {
+                contatoService.salvarContato(contato);
 
-        return ResponseEntity.ok("Sucesso contato cadastrado.");
+                URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/contatos/{id}")
+                        .buildAndExpand(contato.getId()).toUri();
 
-        //return ResponseEntity.created(uri).body(contatoSaved);
+                return ResponseEntity.ok("Sucesso contato cadastrado.");
+            }
+            catch(Exception e){
+                return ResponseEntity.unprocessableEntity().body("Profissional de id " +contato.getProfissional().getId() + " não cadastrado no sistema");
+            }
+        }
+            return ResponseEntity.unprocessableEntity().body("Profissional não informado");
+
     }
 
     @DeleteMapping(value = "/contacts/{id}")
     public ResponseEntity<String> deleteById(@PathVariable Long id){
-        contatoService.deleteContatoById(id);
-        return ResponseEntity.ok("Sucesso contato excluído.");
+        try{
+            contatoService.deleteContatoById(id);
+            return ResponseEntity.ok("Sucesso contato excluído.");
+        }
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Contato ID: " +id + " não encontrado no sistema");
+        }
     }
 
 
     @PutMapping(value = "/contacts/{id}")
-    public ResponseEntity<Contato> update(@PathVariable Long id, @RequestBody Contato contato){
-        Contato contatoAtualizado = contatoService.update(id, contato);
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Contato contato){
 
-        return ResponseEntity.ok().body(contatoAtualizado);
+        try {
+            return ResponseEntity.ok().body(contatoService.update(id, contato));
+        }
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Dados inválidos");
+        }
+
     }
 
 }

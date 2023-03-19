@@ -23,7 +23,9 @@ public class ProfissionalService {
     private ContatoRepository contatoRepository;
 
     public Profissional save(Profissional profissional){
-        return profissionalRepository.save(profissional);
+
+        profissionalRepository.save(profissional);
+        return profissional;
     }
 
     public List<Profissional> findAll(){
@@ -43,26 +45,13 @@ public class ProfissionalService {
     }
 
     public Profissional update(Long id, Profissional profissional) {
+
         Profissional profissionalEntity = profissionalRepository.getReferenceById(id);
 
         profissionalEntity.setNascimento(profissional.getNascimento());
         profissionalEntity.setCreateData(profissional.getCreateData());
         profissionalEntity.setNome(profissional.getNome());
         profissionalEntity.setCargo(profissional.getCargo());
-
-        List<Contato> contatos = new ArrayList<>();
-
-        for(int i=0; i<profissional.getContatos().size();i++){
-            contatos.add(profissional.getContatos().get(i));
-        }
-
-        for(int i=0; i<contatos.size();i++){
-            contatos.get(i).setProfissional(profissionalEntity);
-        }
-
-        profissionalEntity.setContatos(contatos);
-
-        contatoRepository.saveAll(contatos);
 
         return profissionalRepository.save(profissionalEntity);
     }

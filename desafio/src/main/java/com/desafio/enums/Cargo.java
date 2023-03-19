@@ -16,4 +16,13 @@ public enum Cargo {
     public Integer getDescricao() {
         return descricao;
     }
+
+    public static int findByNumber(int number) {
+        for (Cargo cargo : values()) {
+            if (cargo.getDescricao() == number) {
+                return number;
+            }
+        }
+        return 0;
+    }
 }

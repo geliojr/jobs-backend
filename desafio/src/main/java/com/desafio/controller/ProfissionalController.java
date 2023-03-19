@@ -1,10 +1,13 @@
 package com.desafio.controller;
 
+import com.desafio.enums.Cargo;
+import com.desafio.model.Contato;
 import com.desafio.model.Profissional;
 import com.desafio.service.ContatoService;
 import com.desafio.service.ProfissionalService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,7 @@ import javax.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @Api(value = "API REST Desafio")
@@ -26,44 +30,86 @@ public class ProfissionalController {
     private ContatoService contatoService;
 
     @GetMapping(value = "/professionals/{id}")
-    public ResponseEntity<Profissional> findById(@PathVariable Long id){
+    public ResponseEntity<?> findById(@PathVariable Long id){
 
-        Profissional profissional = profissionalService.findById(id);
-        return ResponseEntity.ok().body(profissional);
+        try {
+            Profissional profissional = profissionalService.findById(id);
+            return ResponseEntity.ok().body(profissional);
+        }
+
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Profissional id: " +id +" não cadastrado no sistema");
+        }
+
     }
-
 
     @DeleteMapping(value = "/professionals/{id}")
     public ResponseEntity<String> deleteById(@PathVariable Long id){
 
-        Profissional profissional = profissionalService.findById(id);
+        try{
+            Profissional profissional = profissionalService.findById(id);
 
-        for(int i=0;i<profissional.getContatos().size();i++){
-            contatoService.deleteContatoById(profissional.getContatos().get(i).getId());
+            for(int i=0;i<profissional.getContatos().size();i++){
+                contatoService.deleteContatoById(profissional.getContatos().get(i).getId());
+            }
+
+            profissionalService.deleteProfissionalById(id);
+            return ResponseEntity.ok("Sucesso profissional excluído.");
         }
 
-        profissionalService.deleteProfissionalById(id);
-        return ResponseEntity.ok("Sucesso profissional excluído.");
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Profissional id: " +id +" não cadastrado no sistema");
+        }
+
+
     }
 
     @PostMapping(value = "/professionals")
     public ResponseEntity<String> save(@RequestBody Profissional profissional){
-        Profissional profissionalSaved = profissionalService.save(profissional);
 
-        URI uri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/professionals/{id}")
-                .buildAndExpand(profissionalSaved.getId()).toUri();
+        if(profissional!=null){
+            int result = 0;
 
-        return ResponseEntity.ok("Sucesso profissional cadastrado.");
+            result = Cargo.findByNumber(profissional.getCargo());
 
-        //return ResponseEntity.created(uri).body(profissionalSaved);
+            if(result!=0){
+                profissionalService.save(profissional);
+
+                return ResponseEntity.ok("Sucesso profissional cadastrado.");
+            }
+
+            else{
+                return ResponseEntity.unprocessableEntity().body("Cargo id: " +profissional.getCargo() +" não cadastrado no sistema");
+            }
+
+        }
+
+        return ResponseEntity.unprocessableEntity().body("Dados inválidos");
+
     }
 
     @PutMapping(value = "/professionals/{id}")
-    public ResponseEntity<Profissional> update(@PathVariable Long id, @RequestBody Profissional profissional){
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Profissional profissional){
 
-        Profissional profissionalAtualizado = profissionalService.update(id, profissional);
+        try {
+            if (profissional != null) {
+                int result = 0;
 
-        return ResponseEntity.ok().body(profissionalAtualizado);
+                result = Cargo.findByNumber(profissional.getCargo());
+
+                if (result != 0) {
+                    Profissional profissionalAtualizado = profissionalService.update(id, profissional);
+                    return ResponseEntity.ok().body(profissionalAtualizado);
+                } else {
+                    return ResponseEntity.unprocessableEntity().body("Cargo id: " + profissional.getCargo() + " não cadastrado no sistema");
+                }
+
+            }
+        }
+        catch(Exception e){
+            return ResponseEntity.unprocessableEntity().body("Profissional id: " + id + " não cadastrada no sistema");
+        }
+        return ResponseEntity.unprocessableEntity().body("Dados inválidos");
     }
 
     @GetMapping(value = "/professionals")
@@ -81,9 +127,7 @@ public class ProfissionalController {
 
     }
 
-
-
-    /*@GetMapping(value = "/all-professionals")
+    @GetMapping(value = "/all-professionals")
     @ResponseBody
     public ResponseEntity<List<Profissional>> listarTodosOsProfissionais(){
 
@@ -96,6 +140,6 @@ public class ProfissionalController {
             return ResponseEntity.notFound().build();
         }
 
-    }*/
+    }
 
 }

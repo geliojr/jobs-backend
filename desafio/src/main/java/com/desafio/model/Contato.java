@@ -1,6 +1,7 @@
 package com.desafio.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 
@@ -15,7 +16,7 @@ public class Contato {
 
     @ManyToOne
     @JoinColumn(name = "profissional_id")
-    @JsonIgnore
+
     private Profissional profissional;
 
     public Profissional getProfissional() {
@@ -26,12 +27,12 @@ public class Contato {
         this.profissional = profissional;
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getNome() {
